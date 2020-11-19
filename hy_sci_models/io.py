@@ -88,7 +88,7 @@ def workflow(
         model, train_loader, val_loader, epochs, learning_rate
     )
 
-    return model, training_loss, validation_loss
+    return model, training_loss, validation_loss, train_loader, val_loader, test_loader
 
     # y_list, y_hat_list = nn.test(model, test_loader)
 
@@ -108,6 +108,14 @@ def main() -> None:
     config.read(cfg)
     kwargs = _handle_config(config)
 
-    model, training_loss, validation_loss = workflow(**kwargs)
-
+    (
+        model,
+        training_loss,
+        validation_loss,
+        train_loader,
+        val_loader,
+        test_loader,
+    ) = workflow(**kwargs)
     # y_list, y_hat_list = nn.test(model, test_loader)
+
+    return model, training_loss, validation_loss, train_loader, val_loader, test_loader
