@@ -6,8 +6,10 @@ import sys
 from pathlib import Path
 
 # local imports
+from . import workflows
 from . import data
-from .models import nn
+
+SUPPORTED_MODELS = {"nn": workflows.nn, "ols": workflows.ols}
 
 # Major keys are required
 MAJOR_KEYS = {
@@ -17,6 +19,7 @@ MAJOR_KEYS = {
     "dataset_path": str,
     "features": json.loads,
     "labels": str,
+    "model": SUPPORTED_MODELS,
 }
 
 # Minor keys are optional
@@ -36,6 +39,13 @@ def _handle_config(cfg: configparser.ConfigParser):
 
     data.SEED = config_dict.getint("seed")
 
+    model = SUPPORTED_MODELS.get(config_dict.pop("model").lower())
+    MAJOR_KEYS.pop("model")
+
+    if model is None:
+        error_message = f"Selected model, {model}, does not exist.\nPlease choose from: {list(SUPPORTED_MODELS.keys())}"
+        raise KeyError(error_message)
+
     # Lower case the keys and cast each item to the correct type
     kwargs = {k: v(config_dict[k]) for (k, v) in MAJOR_KEYS.items()}
 
@@ -46,51 +56,43 @@ def _handle_config(cfg: configparser.ConfigParser):
     }
 
     kwargs.update(minor_keys_present)
-    return kwargs
+    return model, kwargs
 
 
-def workflow(
-    dataset_path,
-    features,
-    labels,
-    epochs,
-    batch_size,
-    learning_rate,
-    n_hidden_layers: int = 12,
-    train_size: float = 0.8,
-):
-    feature_data, label_data = data.setup(dataset_path, features, labels)
+def model_factory(model, kwargs):
 
-    # Number of neurons in input layer
-    N_INPUT_FEATURES = feature_data.shape[1]
+    if model == workflows.nn:
+        (
+            _model,
+            training_loss,
+            validation_loss,
+            train_loader,
+            val_loader,
+            test_loader,
+        ) = model(**kwargs)
 
-    (
-        X_train,
-        X_val,
-        X_test,
-        y_train,
-        y_val,
-        y_test,
-    ) = data.split_dataset_into_train_test_val(feature_data, label_data, train_size)
+        results = {
+            "model": _model,
+            "training_loss": training_loss,
+            "validation_loss": validation_loss,
+            "train_loader": train_loader,
+            "val_loader": val_loader,
+            "test_loader": test_loader,
+        }
 
-    X_train, X_val, X_test, y_train, y_val, y_test = data.fit_and_transform(
-        X_train, X_val, X_test, y_train, y_val, y_test
-    )
+        return results
 
-    train_loader, val_loader, test_loader = data.generate_dataloaders(
-        X_train, X_val, X_test, y_train, y_val, y_test, batch_size
-    )
+    elif model == workflows.ols:
+        _model, X_train, X_test, y_train, y_test = model(**kwargs)
+        results = {
+            "model": _model,
+            "X_train": X_train,
+            "X_test": X_test,
+            "y_train": y_train,
+            "y_test": y_test,
+        }
 
-    model = nn.SingleLayerNet(N_INPUT_FEATURES, n_hidden_layers)
-
-    # Train model
-    model, training_loss, validation_loss = nn.train(
-        model, train_loader, val_loader, epochs, learning_rate
-    )
-
-    return model, training_loss, validation_loss, train_loader, val_loader, test_loader
-
-    # y_list, y_hat_list = nn.test(model, test_loader)
+        return results
 
 
 def main() -> None:
@@ -106,16 +108,18 @@ def main() -> None:
 
     config = configparser.ConfigParser()
     config.read(cfg)
-    kwargs = _handle_config(config)
+    model, kwargs = _handle_config(config)
 
-    (
-        model,
-        training_loss,
-        validation_loss,
-        train_loader,
-        val_loader,
-        test_loader,
-    ) = workflow(**kwargs)
-    # y_list, y_hat_list = nn.test(model, test_loader)
+    return model_factory(model, kwargs)
 
-    return model, training_loss, validation_loss, train_loader, val_loader, test_loader
+    # (
+    #     model,
+    #     training_loss,
+    #     validation_loss,
+    #     train_loader,
+    #     val_loader,
+    #     test_loader,
+    # ) = workflows.nn(**kwargs)
+    # # y_list, y_hat_list = nn.test(model, test_loader)
+
+    # return model, training_loss, validation_loss, train_loader, val_loader, test_loader
