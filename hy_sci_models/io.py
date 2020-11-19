@@ -9,7 +9,13 @@ from pathlib import Path
 from . import workflows
 from . import data
 
-SUPPORTED_MODELS = {"nn": workflows.nn, "ols": workflows.ols}
+# TODO: this is staring too look like a class heirachy with models being subclasses.
+# You should do that instead of this...
+
+SUPPORTED_MODELS = {
+    "nn": {"workflow": workflows.nn, "major": OLS_MAJOR, "minor": OLS_MINOR},
+    "ols": {"workflow": workflows.ols, "major": NN_MAJOR, "minor": NN_MINOR},
+}
 
 # Major keys are required
 MAJOR_KEYS = {
