@@ -2,13 +2,7 @@
 
 from setuptools import setup
 
-REQUIRED_PACKAGES = [
-    "torch",
-    "matplotlib",
-    "pandas",
-    "numpy",
-    "sklearn",
-]
+REQUIRED_PACKAGES = ["torch", "matplotlib", "pandas", "numpy", "sklearn", "statsmodels"]
 
 setup(
     install_requires=REQUIRED_PACKAGES,
