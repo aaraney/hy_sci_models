@@ -8,6 +8,10 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from dataclasses import dataclass
+
+# local import
+from .abstractmodeloutput import AbstractModelOutput
 
 logging.basicConfig(
     level="INFO",
@@ -164,3 +168,13 @@ def test(model: nn.Module, test_loader: DataLoader) -> Tuple[np.array]:
     y_hat_list = (np.e ** y_hat_list) - 1
 
     return y_list, y_hat_list
+
+
+@dataclass
+class NNModelOutput(AbstractModelOutput):
+    training_loss: np.array
+    validation_loss: np.array
+
+    train_loader: DataLoader
+    val_loader: DataLoader
+    test_loader: DataLoader
