@@ -55,6 +55,18 @@ def plot_train_val_loss(training_loss, validation_loss):
     ax.set_ylabel("Learning Rate")
     ax.legend()
 
+def plot_nn_diagnostics(results):
+    y, y_hat = models.nn.test(results.model, results.test_loader)
+
+    f, axes = plt.subplots(2, 2, figsize=(10, 10))
+    flat_axes = axes.flat
+
+    plot_train_val_loss(results.training_loss, results.validation_loss, ax=flat_axes[0])
+    plot_scatter(y, y_hat, ax=flat_axes[1])
+    plot_residuals(y=y, y_hat=y_hat, ax=flat_axes[2])
+
+    plt.show()
+
 
 def highest_correlation_after_transformation(
     features: pd.DataFrame, label: pd.Series, transformation_mapping: dict
