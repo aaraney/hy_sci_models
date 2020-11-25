@@ -86,7 +86,7 @@ def generate_dataloaders(
 
 
 def split_dataset_into_train_test_val(
-    X: pd.DataFrame, y: pd.DataFrame, train_size: float
+    X: pd.DataFrame, y: pd.DataFrame, train_size: float, seed=None
 ) -> Tuple[np.array]:
     """Returned as X_train, X_val, X_test, y_train, y_val, y_test
 
@@ -105,11 +105,11 @@ def split_dataset_into_train_test_val(
     # global var, SEED, is default None
     # split features and label data into training and testing set
     X_train, X_first_spite, y_train, y_first_split = train_test_split(
-        X, y, test_size=first_split_size, random_state=SEED
+        X, y, test_size=first_split_size, random_state=seed
     )
 
     X_test, X_val, y_test, y_val = train_test_split(
-        X_first_spite, y_first_split, test_size=TEST_SIZE, random_state=SEED
+        X_first_spite, y_first_split, test_size=TEST_SIZE, random_state=seed
     )
 
     return X_train, X_val, X_test, y_train, y_val, y_test
