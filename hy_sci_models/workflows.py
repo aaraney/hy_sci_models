@@ -50,7 +50,14 @@ def nn(
         model, train_loader, val_loader, epochs, learning_rate
     )
 
-    return model, training_loss, validation_loss, train_loader, val_loader, test_loader
+    return models.nn.NNModelOutput(
+        model=model,
+        training_loss=training_loss,
+        validation_loss=validation_loss,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        test_loader=test_loader,
+    )
 
 
 def ols(
@@ -71,4 +78,6 @@ def ols(
     model = models.ols.OLS(y_train, X_train)
     model = models.ols.train(model)
 
-    return model, X_train, x_test, y_train, y_test
+    return models.ols.OLSModelOutput(
+        model=model, X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test
+    )
