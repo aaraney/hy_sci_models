@@ -16,6 +16,7 @@ def nn(
     learning_rate,
     n_hidden_layers: int = 12,
     train_size: float = 0.8,
+    seed: int = None,
     **kwargs
 ):
     feature_data, label_data = data.setup(dataset_path, features, labels)
@@ -30,7 +31,9 @@ def nn(
         y_train,
         y_val,
         y_test,
-    ) = data.split_dataset_into_train_test_val(feature_data, label_data, train_size)
+    ) = data.split_dataset_into_train_test_val(
+        feature_data, label_data, train_size, seed=seed
+    )
 
     X_train, X_val, X_test, y_train, y_val, y_test = data.fit_and_transform(
         X_train, X_val, X_test, y_train, y_val, y_test
@@ -49,10 +52,10 @@ def nn(
 
     return model, training_loss, validation_loss, train_loader, val_loader, test_loader
 
-    # y_list, y_hat_list = nn.test(model, test_loader)
 
-
-def ols(dataset_path, features, labels, train_size: float = 0.8, **kwargs):
+def ols(
+    dataset_path, features, labels, train_size: float = 0.8, seed: int = None, **kwargs
+):
     feature_data, label_data = data.setup(dataset_path, features, labels)
 
     if train_size >= 1:
@@ -61,8 +64,8 @@ def ols(dataset_path, features, labels, train_size: float = 0.8, **kwargs):
 
     test_size = 1 - train_size
 
-    X_train, x_test, y_train, y_test = train_test_split(
-        feature_data, label_data, test_size=test_size, random_state=data.SEED
+    X_train, X_test, y_train, y_test = train_test_split(
+        feature_data, label_data, test_size=test_size, random_state=seed
     )
 
     model = models.ols.OLS(y_train, X_train)
