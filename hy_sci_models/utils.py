@@ -50,8 +50,8 @@ def plot_scatter(y, y_hat, ax=None):
         f, ax = plt.subplots(figsize=(10, 10))
 
     ax.scatter(y, y_hat, s=2)
-    ax.set_ylabel("y")
-    ax.set_xlabel("y_hat")
+    ax.set_ylabel("y_hat")
+    ax.set_xlabel("y")
 
     ax.axis("square")
     ax.grid()
@@ -79,8 +79,15 @@ def plot_train_val_loss(training_loss, validation_loss, ax=None):
     return f, ax
 
 
-def plot_nn_diagnostics(results):
-    y, y_hat = models.nn.test(results.model, results.test_loader)
+def plot_nn_diagnostics(
+    y: np.array = None, y_hat: np.array = None, results: AbstractModelOutput = None
+):
+    if results is not None:
+        y, y_hat = models.nn.test(results.model, results.test_loader)
+
+    elif y is None or y_hat is None:
+        error_message = "Invalid number of parameters provided to method. Either y and y_hat or results"
+        raise KeyError(error_message)
 
     f, axes = plt.subplots(2, 2, figsize=(10, 10))
     flat_axes = axes.flat
