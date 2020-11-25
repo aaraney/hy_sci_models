@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 
 import sklearn.metrics as sm
 
+# local imports
+from . import models
+
 
 def summary_stats(y, y_hat):
     mse = sm.mean_squared_error(y, y_hat)
@@ -22,12 +25,16 @@ def percent_bias(y, y_hat):
 
 
 def plot_residuals(
-    y: np.array = None, y_hat: np.array = None, residuals: np.array = None
+    y: np.array = None, y_hat: np.array = None, residuals: np.array = None, ax=None
 ):
+    if ax is not None:
+        f = None
+
+    else:
+        f, ax = plt.subplots(figsize=(10, 10))
+
     if not residuals:
         residuals = y - y_hat
-
-    f, ax = plt.subplots(figsize=(10, 10))
 
     ax.scatter(range(len(residuals)), residuals, s=2)
     ax.axhline(y=0, color="black")
@@ -35,17 +42,31 @@ def plot_residuals(
     return f, ax
 
 
-def plot_scatter(y, y_test):
-    f, ax = plt.subplots(figsize=(10, 10))
+def plot_scatter(y, y_hat, ax=None):
+    if ax is not None:
+        f = None
 
-    ax.scatter(y, y_test, s=2)
+    else:
+        f, ax = plt.subplots(figsize=(10, 10))
+
+    ax.scatter(y, y_hat, s=2)
+    ax.set_ylabel("y")
+    ax.set_xlabel("y_hat")
+
+    ax.axis("square")
+    ax.grid()
     ax.axline((1, 1), slope=1, c="black")
 
     return f, ax
 
 
-def plot_train_val_loss(training_loss, validation_loss):
-    f, ax = plt.subplots(figsize=(10, 10))
+def plot_train_val_loss(training_loss, validation_loss, ax=None):
+    if ax is not None:
+        f = None
+
+    else:
+        f, ax = plt.subplots(figsize=(10, 10))
+
     n_epochs = range(1, len(training_loss) + 1)
 
     ax.plot(n_epochs, training_loss, label="training loss")
@@ -54,6 +75,9 @@ def plot_train_val_loss(training_loss, validation_loss):
     ax.set_xlabel("Epochs")
     ax.set_ylabel("Learning Rate")
     ax.legend()
+
+    return f, ax
+
 
 def plot_nn_diagnostics(results):
     y, y_hat = models.nn.test(results.model, results.test_loader)
