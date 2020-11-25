@@ -117,3 +117,50 @@ def highest_correlation_after_transformation(
         drop=True
     )
     return result_df
+
+
+def transform_from_highest_correlation_df(
+    features_df: pd.DataFrame, transforms_df: pd.DataFrame, transformation_mapping: dict
+):
+    """Transform a set of features based on a dataframe of feature names and
+    transformations. This method is written be used with the output of and dictionary
+    mapping from `highest_correlation_after_transformation`."""
+
+    columns_of_interest = transforms_df["feature"]
+
+    return features_df.apply(
+        lambda x: transformation_mapping[
+            transforms_df.loc[columns_of_interest == x.name, "transformation"].iat[0]
+        ](x)
+    )
+
+
+def _scale_lowest_to_one(ds: pd.Series):
+    min = ds.min()
+
+    if min < 0:
+        ds = np.abs(min) + ds
+    else:
+        ds = ds - min
+
+    # Adding 1 to avoid divide by zero
+    return ds + 1
+
+
+def _safety_against_negatives(ds: pd.Series):
+    min = ds.min()
+
+    if min <= 0:
+        return _scale_lowest_to_one(ds)
+
+    return ds
+
+
+transformation_functions = {
+    "inverse": lambda x: 1 / _safety_against_negatives(x),
+    "log": lambda x: np.log(_safety_against_negatives(x)),
+    "cube_root": lambda x: x ** (1 / 3),
+    "scale_lowest_to_zero": _scale_lowest_to_one,
+    "scale_lowest_to_one_log": lambda x: np.log(_scale_lowest_to_one(x)),
+    "scale_lowest_to_one_inverse": lambda x: 1 / _scale_lowest_to_one(x),
+}
