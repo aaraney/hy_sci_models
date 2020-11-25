@@ -8,6 +8,7 @@ import sklearn.metrics as sm
 
 # local imports
 from . import models
+from .models.abstractmodeloutput import AbstractModelOutput
 
 
 def summary_stats(y, y_hat):
