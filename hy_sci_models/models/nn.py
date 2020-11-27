@@ -46,6 +46,7 @@ def train(
     val_loader: DataLoader,
     epochs: int,
     learning_rate: float,
+    seed: int = None
 ) -> Tuple:
     """
     Trains and validates input model.
@@ -54,6 +55,10 @@ def train(
         model, training loss: List, validation loss: List
     """
     log = logging.getLogger()
+
+    # If torch seed is provided, set for reproducibility
+    if seed:
+        torch.manual_seed(seed)
 
     training_loss_list = []
     validation_loss_list = []

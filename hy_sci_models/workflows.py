@@ -47,7 +47,7 @@ def nn(
 
     # Train model
     model, training_loss, validation_loss = models.nn.train(
-        model, train_loader, val_loader, epochs, learning_rate
+        model, train_loader, val_loader, epochs, learning_rate, seed=seed
     )
 
     return models.nn.NNModelOutput(
