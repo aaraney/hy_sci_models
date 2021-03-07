@@ -18,31 +18,69 @@ from typing import List, Tuple, Union
 
 # local imports
 from .models.nn import SingleLayerNet
+from . import utils
 
 # SEED variable. This is changed if passed in setup file
 SEED = None
 
 
-def setup(dataset: str, features: List[str], labels: str) -> Tuple[pd.DataFrame]:
-    """Read input pickle file, extract features and labels of interest, pre-process
-    (downcast to float32) and return a tuple of features, labels.
+def setup(
+    dataset: Union[str, pd.DataFrame], features: List[str], labels: str
+) -> Tuple[pd.DataFrame]:
+    """Read input pickle file or passed dataframe, extract features and labels of
+    interest, pre-process (downcast to float32) and return a tuple of features,
+    labels.
     """
-    # Read input file
-    data = pd.read_pickle(dataset)
+    if isinstance(dataset, pd.DataFrame):
+        data = dataset
+    else:
+        # Read input file
+        data = pd.read_pickle(dataset)
 
     # NOTE: DELETE SOON
-    data = data[(data[labels] > 0.0) & (data["site_no"] != 13290450)]
+    # data = data[(data[labels] > 0.0) & (data["site_no"] != 13290450)]
+    # data = data[(data["order"] < 7.0)]
 
     # Downcast all float64 to float32
-    data = downcast_columns_to_float32(data)
+    # data = downcast_columns_to_float32(data)
 
     # Extract labels
     # NOTE: This needs to change. This should be changed in `models.nn::test` also
-    processed_labels = np.log(data[labels] + 1)
+    processed_labels = data[labels]
+    processed_labels = pd.to_numeric(processed_labels, downcast="float")
+    # processed_labels = np.log(data[labels] + 1)
+    # processed_labels = np.cbrt(data[labels])
 
     # Process input features by taking subset and filling na values with the mean from
     # the column of origin
     processed_feature_data = process_features(data, features)
+
+    # Might change back in future. Allows for non-numeric data to passed
+    numeric_cols = processed_feature_data.columns[
+        processed_feature_data.dtypes.eq(np.number)
+    ]
+    non_numeric_cols = processed_feature_data.columns[
+        ~processed_feature_data.dtypes.eq(np.number)
+    ]
+    processed_feature_data[numeric_cols] = processed_feature_data[numeric_cols].apply(
+        pd.to_numeric, downcast="float"
+    )
+
+    # Separate feature data into numeric and non-numeric
+    processed_feature_data_non_numeric = processed_feature_data[non_numeric_cols]
+    processed_feature_data = processed_feature_data[numeric_cols]
+
+    # NOTE: Delete soon
+    best_transforms = utils.highest_correlation_after_transformation(
+        processed_feature_data, processed_labels, utils.transformation_functions
+    )
+
+    processed_feature_data = utils.transform_from_highest_correlation_df(
+        processed_feature_data, best_transforms, utils.transformation_functions
+    )
+
+    processed_feature_data = processed_feature_data.fillna(0)
+    processed_feature_data[non_numeric_cols] = processed_feature_data_non_numeric
 
     return processed_feature_data, processed_labels
 
@@ -104,12 +142,12 @@ def split_dataset_into_train_test_val(
 
     # global var, SEED, is default None
     # split features and label data into training and testing set
-    X_train, X_first_spite, y_train, y_first_split = train_test_split(
+    X_train, X_first_spilt, y_train, y_first_split = train_test_split(
         X, y, test_size=first_split_size, random_state=seed
     )
 
     X_test, X_val, y_test, y_val = train_test_split(
-        X_first_spite, y_first_split, test_size=TEST_SIZE, random_state=seed
+        X_first_spilt, y_first_split, test_size=TEST_SIZE, random_state=seed
     )
 
     return X_train, X_val, X_test, y_train, y_val, y_test
